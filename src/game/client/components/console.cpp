@@ -1196,34 +1196,86 @@ void CGameConsole::OnRender()
 					mousePress = false;
 				}
 				// -------------------- end clipboard selection code -------------------
-
-				//url highlighting
+				// Console output highlighting by YoungFlyme (dafuq I never suppose that I can do somthing here!)
 				TextRender()->SetCursor(&Cursor, 0.0f, y-OffsetY, FontSize, TEXTFLAG_RENDER, 0, m_pClient->m_pFontMgr->GetMonoFont());
 				Cursor.m_LineWidth = Screen.w-10.0f;
 
+				const char *pCursorConsole = pEntry->m_aText;
+				const char *pConsoleBeginning = pEntry->m_aText;
+				const char *pConsoleEnding;
+
+				CUIRect TextRectConsole;
+				
+				char aUrlCons[64];
+				int SizeConsole;
+
+				if(!pConsoleBeginning)
+					break;
+
+				mem_zero(aUrlCons, sizeof(aUrlCons));
+				SizeConsole = 0;
+				
+				std::string consolelinks[] = {"[serv]", "[chat]", "[teamchat]", " "};
+				int Mark = 255; //3 = not mark | 0 = [serv] | 1 = [chat] | 2 = [teamchat]
+				
+				pConsoleBeginning = str_find(pCursorConsole,consolelinks[0].c_str());
+				if (pConsoleBeginning)
+				{
+					Mark = 0;
+				}
+				if(!pConsoleBeginning)
+  				{
+ 					for( unsigned int a = 1; a < sizeof(consolelinks)/sizeof(consolelinks[0]); a = a + 1 )
+  					{
+ 						pConsoleBeginning = str_find(pCursorConsole, consolelinks[a].c_str());
+  						if(pConsoleBeginning)
+							Mark = a;
+						if(pConsoleBeginning)
+  							break;
+  					}
+  				}
+				if(!pConsoleBeginning)
+  				{
+					pConsoleBeginning = str_find(pCursorConsole, "[");
+  				}
+				
 				const char *pCursor = pEntry->m_aText;
 				const char *pUrlBeginning = pEntry->m_aText;
 				const char *pUrlEnding;
 
 				char aUrl[64];
 				int UrlSize;
+				
+				vec3 rgbSys = HslToRgb(vec3(g_Config.m_ClMessageSystemHue / 255.0f, g_Config.m_ClMessageSystemSat / 255.0f, g_Config.m_ClMessageSystemLht / 255.0f));
+				vec3 rgbChat = HslToRgb(vec3(g_Config.m_ClMessageHue / 255.0f, g_Config.m_ClMessageSat / 255.0f, g_Config.m_ClMessageLht / 255.0f));
+				vec3 rgbTeam = HslToRgb(vec3(g_Config.m_ClMessageTeamHue / 255.0f, g_Config.m_ClMessageTeamSat / 255.0f, g_Config.m_ClMessageTeamLht / 255.0f));
+				
+				vec3 rgb;
 
 				CUIRect TextRect;
 
 				bool Found = false;
-				bool One = true;
+				
+				std::string startlinks[] = {"ftp://", "http://", "https://", "www.", " "};
 
 				if(!pUrlBeginning)
 					break;
 
 				mem_zero(aUrl, sizeof(aUrl));
 				UrlSize = 0;
-
-				pUrlBeginning = str_find(pCursor, "http://");
+				pUrlBeginning = str_find(pCursor,startlinks[0].c_str());
 				if(!pUrlBeginning)
-					pUrlBeginning = str_find(pCursor, "https://");
-
-				if(pUrlBeginning) // found the link
+  				{
+  					std::string name;
+ 					for( unsigned int a = 1; a < sizeof(startlinks)/sizeof(startlinks[0]); a = a + 1 )
+  					{
+ 						name = startlinks[a];
+ 						pUrlBeginning = str_find(pCursor, startlinks[a].c_str());
+  						if(pUrlBeginning)
+  							break;
+  					}
+  				}
+				if(pUrlBeginning && pConsoleBeginning) // found the link
 				{
 					Found = true;
 
@@ -1232,9 +1284,17 @@ void CGameConsole::OnRender()
 						pUrlEnding = pUrlBeginning + str_length(pUrlBeginning);
 					else
 					{
-						One = false;
 						pUrlEnding++;
 					}
+					pConsoleEnding = str_find(pConsoleBeginning, " ");
+					if(!pConsoleEnding)
+						pConsoleEnding = pConsoleBeginning + str_length(pConsoleBeginning);
+					else
+					{
+						pConsoleEnding++;
+					}
+					
+					SizeConsole = pConsoleEnding - pConsoleBeginning;
 
 					UrlSize = pUrlEnding - pUrlBeginning;
 					str_copy(aUrl, pUrlBeginning, UrlSize + 1);
@@ -1245,17 +1305,60 @@ void CGameConsole::OnRender()
 					TextRect.w = TextRender()->TextWidth(0, FontSize, pUrlBeginning, UrlSize);
 					TextRect.h = FontSize;
 
-					// render the first part
-					if(pUrlBeginning - pCursor > 0)
+					if(pConsoleBeginning - pCursorConsole > 0)
 					{
-						TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-						TextRender()->TextEx(&Cursor, pCursor, pUrlBeginning - pCursor);
+						TextRender()->TextColor(1.0f, 0.5f, 0.25f, 1.0f); 
+						TextRender()->TextEx(&Cursor, pCursorConsole, pConsoleBeginning - pCursorConsole);
+						rgb = HslToRgb(vec3(1.0f,0.5f,0.25f));
+						
 					}
 
+					if (Mark == 0) // Colors for the output method. 
+					{
+						//TextRender()->TextColor(rgbSys.r, rgbSys.g, rgbSys.b, 1.0f); // Yellow
+						rgb = rgbSys;
+					}
+					else if (Mark == 1)
+					{
+						if (rgbChat == vec3(1,1,1))
+							//TextRender()->TextColor(rgbChat.r-0.28f, rgbChat.g-0.1f, rgbChat.b, 1.0f); // Custom - Blue like (White is not good for here.)
+							rgb = HslToRgb(vec3(g_Config.m_ClMessageHue / 255.0f-0.28f, g_Config.m_ClMessageSat / 255.0f-0.1f, g_Config.m_ClMessageLht / 255.0f));
+						else
+							//TextRender()->TextColor(rgbChat.r, rgbChat.g, rgbChat.b, 1.0f);
+							rgb = rgbChat;
+					}
+					else if (Mark == 2)
+					{
+						//TextRender()->TextColor(rgbTeam.r, rgbTeam.g, rgbTeam.b, 1.0f); // Green
+						rgb = rgbTeam;
+					}
+					else
+					{
+						rgb = HslToRgb(vec3(1.0f,1.0f,1.0f));
+					}
+					
+					
+					TextRender()->TextColor(rgb.r, rgb.g, rgb.b, 1.0f);
+					
+					if (UrlSize > 1)
+					{
+						// render the output
+						TextRender()->TextEx(&Cursor, pConsoleBeginning, SizeConsole);
+					
+						//render the rest till the link -- Reset Color before!
+						TextRender()->TextColor(rgb.r, rgb.g, rgb.b, 1.0f); //White
+						TextRender()->TextEx(&Cursor, pConsoleEnding,pUrlBeginning - pConsoleEnding);
+					}
+					else
+					{
+						// render the output
+						TextRender()->TextEx(&Cursor, pConsoleBeginning, SizeConsole-1);
+					}
+					
 					// set the color and check if pressed
 					if(UI()->MouseInsideNative(mx, my, &TextRect))
 					{
-						TextRender()->TextColor(0.0f, 1.0f, 0.39f, 1.0f);
+						TextRender()->TextColor(0.0f, 0.19f, 1.0f, 1.0f);
 						static float LastClicked = 0;
 						if(Input()->MouseDoubleClick() && Client()->LocalTime() > LastClicked + 1)
 						{
@@ -1266,23 +1369,40 @@ void CGameConsole::OnRender()
 						}
 					}
 					else
-						TextRender()->TextColor(1.0f, 0.39f, 0.0f, 1.0f);
+						TextRender()->TextColor(0.0f, 0.69f, 1.0f, 1.0f);
 
 					// render the link
 					TextRender()->TextEx(&Cursor, pUrlBeginning, UrlSize);
-
-					// render the rest
-					if(One)
+					
+					if (Mark == 0) // Color after Console output!
 					{
-						TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-						TextRender()->TextEx(&Cursor, pUrlEnding, str_length(pUrlEnding));
+						TextRender()->TextColor(rgbSys.r, rgbSys.g, rgbSys.b, 1.0f); // Yellow
+						// TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f); // White
+					}
+					else if (Mark == 1)
+					{
+						if (rgbChat == vec3(1,1,1))
+							TextRender()->TextColor(rgbChat.r-0.28f, rgbChat.g-0.1f, rgbChat.b, 1.0f); // Custom - Blue like (White is not good for here.)
+						else
+							TextRender()->TextColor(rgbChat.r, rgbChat.g, rgbChat.b, 1.0f);
+						
+						// TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f); // White
+					}
+					else if (Mark == 2)
+					{
+						TextRender()->TextColor(rgbTeam.r, rgbTeam.g, rgbTeam.b, 1.0f); // Green
+						// TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f); // White
 					}
 					else
 					{
-						TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-						TextRender()->TextEx(&Cursor, pUrlEnding, str_length(pUrlEnding));
+						// TextRender()->TextColor(1.0f, 0.5f, 0.25f, 1.0f); //Orange
+						TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f); //White
 					}
-
+					
+					// Render the real rest!
+					TextRender()->TextEx(&Cursor, pUrlEnding, str_length(pUrlEnding));
+					
+					pCursorConsole = pConsoleEnding;
 					pCursor = pUrlEnding;
 				}
 
