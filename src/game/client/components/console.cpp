@@ -881,7 +881,7 @@ void CGameConsole::OnRender()
 
 	CInstance *pConsole = CurrentConsole();
 	{
-		float FontSize = (float)g_Config.m_ClMonoFontSize;
+		float FontSize = 12.0f;
 		float RowHeight = FontSize*1.25f;
 		float x = 3;
 		float y = ConsoleHeight - RowHeight - 5.0f;
@@ -1309,32 +1309,22 @@ void CGameConsole::OnRender()
 					{
 						TextRender()->TextColor(1.0f, 0.5f, 0.25f, 1.0f); 
 						TextRender()->TextEx(&Cursor, pCursorConsole, pConsoleBeginning - pCursorConsole);
-						rgb = HslToRgb(vec3(1.0f,0.5f,0.25f));
-						
 					}
-
+					rgb = vec3(1.0f,0.5f,0.25f);
 					if (Mark == 0) // Colors for the output method. 
 					{
-						//TextRender()->TextColor(rgbSys.r, rgbSys.g, rgbSys.b, 1.0f); // Yellow
 						rgb = rgbSys;
 					}
 					else if (Mark == 1)
 					{
 						if (rgbChat == vec3(1,1,1))
-							//TextRender()->TextColor(rgbChat.r-0.28f, rgbChat.g-0.1f, rgbChat.b, 1.0f); // Custom - Blue like (White is not good for here.)
-							rgb = HslToRgb(vec3(g_Config.m_ClMessageHue / 255.0f-0.28f, g_Config.m_ClMessageSat / 255.0f-0.1f, g_Config.m_ClMessageLht / 255.0f));
+							rgb = vec3(rgbChat.r-0.28f, rgbChat.g-0.1f, rgbChat.b);
 						else
-							//TextRender()->TextColor(rgbChat.r, rgbChat.g, rgbChat.b, 1.0f);
 							rgb = rgbChat;
 					}
 					else if (Mark == 2)
 					{
-						//TextRender()->TextColor(rgbTeam.r, rgbTeam.g, rgbTeam.b, 1.0f); // Green
 						rgb = rgbTeam;
-					}
-					else
-					{
-						rgb = HslToRgb(vec3(1.0f,1.0f,1.0f));
 					}
 					
 					
@@ -1346,7 +1336,6 @@ void CGameConsole::OnRender()
 						TextRender()->TextEx(&Cursor, pConsoleBeginning, SizeConsole);
 					
 						//render the rest till the link -- Reset Color before!
-						TextRender()->TextColor(rgb.r, rgb.g, rgb.b, 1.0f); //White
 						TextRender()->TextEx(&Cursor, pConsoleEnding,pUrlBeginning - pConsoleEnding);
 					}
 					else
@@ -1377,7 +1366,6 @@ void CGameConsole::OnRender()
 					if (Mark == 0) // Color after Console output!
 					{
 						TextRender()->TextColor(rgbSys.r, rgbSys.g, rgbSys.b, 1.0f); // Yellow
-						// TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f); // White
 					}
 					else if (Mark == 1)
 					{
@@ -1386,16 +1374,13 @@ void CGameConsole::OnRender()
 						else
 							TextRender()->TextColor(rgbChat.r, rgbChat.g, rgbChat.b, 1.0f);
 						
-						// TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f); // White
 					}
 					else if (Mark == 2)
 					{
 						TextRender()->TextColor(rgbTeam.r, rgbTeam.g, rgbTeam.b, 1.0f); // Green
-						// TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f); // White
 					}
 					else
 					{
-						// TextRender()->TextColor(1.0f, 0.5f, 0.25f, 1.0f); //Orange
 						TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f); //White
 					}
 					
