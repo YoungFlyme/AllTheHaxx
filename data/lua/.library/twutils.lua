@@ -84,7 +84,7 @@ function IsFreezed(Id)
 	if Game.CharSnap(Id or Game.LocalCID).Cur.Weapon == 5 then
 		if IsFreezeTile(Game.Players(Id or Game.LocalCID).Tee.Pos.x,Game.Players(Id or Game.LocalCID).Tee.Pos.y) then
 			return 2
-		elseif not (IsFreezeTile(Game.Players(Id or Game.LocalCID).Tee.Pos.x,Game.Players(Id or Game.LocalCID).Tee.Pos.y))
+		elseif not (IsFreezeTile(Game.Players(Id or Game.LocalCID).Tee.Pos.x,Game.Players(Id or Game.LocalCID).Tee.Pos.y)) then
 			return 1
 		end
 	else
