@@ -217,6 +217,7 @@ MACRO_CONFIG_INT(ClIRCShowJoins, cl_irc_show_joins, 0, 0, 2, CFGFLAG_CLIENT|CFGF
 MACRO_CONFIG_INT(ClIRCGetStartupMsgs, cl_irc_get_startup_msgs, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Whether to get some messages from the server when connecting")
 MACRO_CONFIG_INT(SndIRC, snd_irc, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Play a sound when an irc chat message arrives")
 MACRO_CONFIG_INT(ClIRCAllowJoin, cl_irc_allow_join, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Allow others to request the server you're playing on")
+MACRO_CONFIG_INT(ClIRCInvites, cl_irc_invites, 1, 0, 2, CFGFLAG_CLIENT|CFGFLAG_SAVE, "IRC invites (0 = disable, 1 = only on open channels, 2 = show all invites)")
 //
 #if defined(FEATURE_LUA)
 MACRO_CONFIG_INT(ClLua, cl_lua, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Enable Lua")

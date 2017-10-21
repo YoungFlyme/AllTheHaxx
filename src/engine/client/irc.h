@@ -68,6 +68,7 @@ public:
 
 	void SendGetServer(const char *to);
 	void SendVersion(const char *to);
+    void SendInvite(const char *to);
 
 	void StartConnection();
 	void Disconnect(const char *pReason = 0);

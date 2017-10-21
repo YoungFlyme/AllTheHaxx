@@ -154,9 +154,9 @@ public:
 		MSG_TYPE_ACTION,
 		MSG_TYPE_TWSERVER,
 		MSG_TYPE_GET_TWSERVER,
+		MSG_TYPE_INVITE,
 		MSG_TYPE_CTCP // any unknown ctcp
     };
-
 
     virtual void Init() = 0;
 
@@ -194,6 +194,7 @@ public:
     virtual void SendRaw(const char *fmt, ...) = 0;
     virtual void SendGetServer(const char *to) = 0;
     virtual void SendVersion(const char *to) = 0;
+    virtual void SendInvite(const char *to) = 0;
 
     virtual void StartConnection() = 0;
     virtual void Disconnect(const char *pReason = 0) = 0;

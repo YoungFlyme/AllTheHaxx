@@ -12,6 +12,8 @@
 #include <game/client/components/console.h>
 #include <game/generated/client_data.h>
 
+#include <engine/irc.h>
+
 void CMenus::ConKeyToggleIRC(IConsole::IResult *pResult, void *pUserData)
 {
 	CALLSTACK_ADD();
@@ -446,8 +448,11 @@ void CMenus::RenderIRC(CUIRect MainView)
 						vec3 rgb = HslToRgb(vec3((float)g_Config.m_ClMessageHighlightHue/255.0f, (float)g_Config.m_ClMessageHighlightSat/255.0f, (float)g_Config.m_ClMessageHighlightLht/255.0f));
 						TextRender()->TextColor(rgb.r, rgb.g, rgb.b, 1.0f);
 					}
-					UI()->DoLabelScaled(&Item.m_Rect, pChan->m_Buffer[i].c_str(), (float)g_Config.m_ClMonoFontSize, -1, -1.0f, 0, m_pClient->m_pFontMgrMono->GetFont(FONT_REGULAR));
-					TextRender()->TextColor(1,1,1,1);
+					if (!str_find(pChan->m_Buffer[i].c_str(),"///"))
+					{
+						UI()->DoLabelScaled(&Item.m_Rect, pChan->m_Buffer[i].c_str(), (float)g_Config.m_ClMonoFontSize, -1, -1.0f, 0, m_pClient->m_pFontMgrMono->GetFont(FONT_REGULAR));
+						TextRender()->TextColor(1,1,1,1);
+					}
 				}
 			}
 			UiDoListboxEnd(&s_ChatScrollValue, 0);
@@ -483,6 +488,8 @@ void CMenus::RenderIRC(CUIRect MainView)
 			}*/
 			UiDoListboxStart(&s_Chat, &Chat, 12.0f, pQuery->User(), "", (int)pQuery->m_Buffer.size(), 1, -1,
 							 s_ChatScrollValue);
+
+			int m_currentInviteBC = 0;
 			for(size_t i = 0; i < pQuery->m_Buffer.size(); i++)
 			{
 				CPointerContainer Container(&pQuery->m_Buffer[i]);
@@ -492,8 +499,51 @@ void CMenus::RenderIRC(CUIRect MainView)
 				{
 					Item.m_Rect.x -= 1.7f*Item.m_Rect.w * s_HScrollbarVal;
 					if(pQuery->m_Buffer[i].c_str())
+					{
 						if(str_length(pQuery->m_Buffer[i].c_str()))
-							UI()->DoLabelScaled(&Item.m_Rect, pQuery->m_Buffer[i].c_str(), (float)g_Config.m_ClMonoFontSize, -1, -1.0f, 0, m_pClient->m_pFontMgrMono->GetFont(FONT_REGULAR));
+						{
+							if (str_find(pQuery->m_Buffer[i].c_str(),"///"))
+							{
+								if (str_find(pQuery->m_Buffer[i].c_str(),"INVITE"))
+								{
+									std::string copy = pQuery->m_Buffer[i];
+
+									const std::string& from = "/// INVITE ";
+									const std::string& to = "";
+									size_t pos = copy.find(from);
+									copy.replace( pos , from.length(),to);
+
+									char aAddr[NETADDR_MAXSTRSIZE];
+									mem_zero(aAddr, sizeof(aAddr));
+									str_copy(aAddr, copy.c_str(), sizeof(aAddr));
+
+									CTextCursor Cursor;
+									TextRender()->SetCursor(&Cursor, Item.m_Rect.x, Item.m_Rect.y, (float)g_Config.m_ClMonoFontSize, TEXTFLAG_RENDER);
+									Cursor.m_LineWidth = Item.m_Rect.w;
+									TextRender()->TextEx(&Cursor, "You got invited. Klick  ", -1);
+
+									CUIRect Button;
+									Button.x = Cursor.m_X;
+									Button.y = Cursor.m_Y+1;
+									Button.w = 50;
+									Button.h = Item.m_Rect.h;
+
+									static CButtonContainer s_ButtonConnect[128];
+									if(DoButton_Menu(&s_ButtonConnect[m_currentInviteBC], Localize("Join"), 0, &Button,aAddr))
+									{
+										Kernel()->RequestInterface<IClient>()->Connect(aAddr);
+									}
+									m_currentInviteBC++;
+									Cursor.m_X += Button.w;
+									TextRender()->TextEx(&Cursor, "  to join.", -1);
+								}
+							}
+							else
+							{
+								UI()->DoLabelScaled(&Item.m_Rect, pQuery->m_Buffer[i].c_str(), (float)g_Config.m_ClMonoFontSize, -1, -1.0f, 0, m_pClient->m_pFontMgrMono->GetFont(FONT_REGULAR));
+							}
+						}
+					}
 				}
 			}
 			UiDoListboxEnd(&s_ChatScrollValue, 0);
@@ -520,6 +570,18 @@ void CMenus::RenderIRC(CUIRect MainView)
 				if(UI()->DoButtonLogic(&s_ButtonQSLog, "", 0, &ButtonQS))
 				{
 					m_pClient->IRC()->SendGetServer(pQuery->User());
+				}
+				ButtonQS.y += 50.0f;
+				ButtonQS.x -= 5.0f;
+				RenderTools()->DrawUIRect(&ButtonQS, vec4(0.2f, 0.6f, 0.4f, UI()->MouseInside(&ButtonQS) ? 1.0f : 0.6f),
+						CUI::CORNER_ALL, 15.0f);
+				ButtonQS.y += 7.0f;
+				UI()->DoLabelScaled(&ButtonQS, Localize("Invite"), 11.0f, 0);
+				//DoButton_Icon(IMAGE_BROWSEICONS, SPRITE_BROWSE_CONNECT, &ButtonQS, vec4(0.47f, 0.58f, 0.72f, 1.0f));
+				static int s_ButtonQSInv = 1;
+				if(UI()->DoButtonLogic(&s_ButtonQSInv, "", 0, &ButtonQS))
+				{
+					m_pClient->IRC()->SendInvite(pQuery->User());
 				}
 			}
 		}

@@ -587,6 +587,45 @@ void CIRC::StartConnection() // call this from a thread only!
 									SendServer(MsgFrom.c_str(), CleanMsg.c_str());
 							}
 						}
+						else if(MsgType == MSG_TYPE_INVITE) // somebody wants to invite us to his server
+						{
+							if (g_Config.m_ClIRCInvites != 0)
+							{
+								del = aMsgText.find_first_of(' ');
+								ldel = aMsgText.find_last_of(' ');
+								if(del != std::string::npos && del != ldel)
+								{
+									char aAddr[NETADDR_MAXSTRSIZE];
+									mem_zero(aAddr, sizeof(aAddr));
+									std::string CleanMsg = aMsgText.substr(10);
+									CleanMsg = CleanMsg.substr(0, CleanMsg.length() - 1);
+									size_t pc = CleanMsg.find_first_of(' ');
+									if(pc != std::string::npos)
+									{
+										str_copy(aAddr, CleanMsg.substr(pc + 1).c_str(), sizeof(aAddr));
+										if(aAddr[0] != 0)
+										{
+											// Do button which brings us to his server!
+											CIRCCom *pCom = GetCom(MsgFrom);
+
+											if(!pCom && g_Config.m_ClIRCInvites == 2)
+											{
+												pCom = OpenComQuery(MsgFrom.c_str(), false);
+											}
+
+											if(pCom)
+											{
+												char aBuf[128];
+													str_format(aBuf, sizeof(aBuf),
+															"/// INVITE %s", aAddr);
+												pCom->m_Buffer.push_back(std::string(aBuf));
+											}
+											mem_zero(m_CmdToken, sizeof(m_CmdToken));
+										}
+									}
+								}
+							}
+						}
 						else if(MsgType == MSG_TYPE_CTCP) // custom ctcp message
 						{
 							array<std::string> CmdListParams;
@@ -1282,6 +1321,8 @@ int CIRC::GetMsgType(const char *msg)
 			return MSG_TYPE_TWSERVER;
 		else if (str_comp_nocase(aCmd, "GETTWSERVER") == 0)
 			return MSG_TYPE_GET_TWSERVER;
+		else if (str_comp_nocase(aCmd, "INVITE") == 0)
+			return MSG_TYPE_INVITE;
 
 		return MSG_TYPE_CTCP;
 	}
@@ -1299,6 +1340,15 @@ void CIRC::SendGetServer(const char *to)
 {
 	str_format(m_CmdToken, sizeof(m_CmdToken), "%i", rand());
 	SendRaw("PRIVMSG %s :\1GETTWSERVER %s\1", to, m_CmdToken);
+}
+
+void CIRC::SendInvite(const char *to)
+{
+	const char *curAddr = m_pClient->GetCurrentServerAddress();
+	if (curAddr&&curAddr[0]!=0)
+	{
+		SendRaw("PRIVMSG %s :\1INVITE 1  %s\1", to, curAddr);
+	}
 }
 
 void CIRC::SendVersion(const char *to)
