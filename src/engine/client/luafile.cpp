@@ -449,7 +449,6 @@ bool CLuaFile::LoadFile(const char *pFilename, bool Import)
 	}
 	else
 	{
-		dbg_msg("Lua/debug", "Applied Permission %x!",NewFlags);
 		ApplyPermissions(NewFlags); // only apply those that are new
 	}
 
@@ -597,7 +596,7 @@ const char *CLuaFile::PermissionsName(unsigned int PermissionFlags)
 	if(PermissionFlags&PERMISSION_FILESYSTEM)
 		str_append(s_aResult, "FILESYSTEM, ", sizeof(s_aResult));
 
-	s_aResult[str_length(s_aResult)-1 - 2] = '\0';
+	s_aResult[str_length(s_aResult)-1-1] = '\0';
 	return s_aResult;
 }
 
