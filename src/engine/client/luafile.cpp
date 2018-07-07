@@ -437,9 +437,10 @@ bool CLuaFile::LoadFile(const char *pFilename, bool Import)
 	}
 
 	// some security steps right here...
-	unsigned int NewFlags = (LoadPermissionFlags(pFilename, Import) & ~m_PermissionFlags);
+	unsigned int NewFlags = LoadPermissionFlags(pFilename, Import);
 	if(Import)
 	{
+		NewFlags = (NewFlags & ~m_PermissionFlags);
 		if(NewFlags != 0)
 		{
 			luaL_error(m_pLuaState, "imported script '%s' needs permissions for '%s'!", pFilename, PermissionsName(NewFlags));
@@ -448,6 +449,7 @@ bool CLuaFile::LoadFile(const char *pFilename, bool Import)
 	}
 	else
 	{
+		dbg_msg("Lua/debug", "Applied Permission %x!",NewFlags);
 		ApplyPermissions(NewFlags); // only apply those that are new
 	}
 
